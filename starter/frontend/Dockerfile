@@ -17,6 +17,9 @@ COPY . .
 # Build the app
 RUN npm run build
 
+# install serve tool
+RUN npm install -g serve
+
 # Expose the port used by the React app
 EXPOSE 3000
 
