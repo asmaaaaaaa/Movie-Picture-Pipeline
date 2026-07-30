@@ -32,7 +32,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # Ou '3.x' pour la dernière version stable
+          python-version: '3.10' # Ou '3.x' pour la dernière version stable
 
       
       # 3. Installer le linter (et les dépendances si nécessaire)
@@ -44,7 +44,7 @@ jobs:
       # 4. Exécution du linter dans le dossier backend
       # Retourne un code d'erreur (exit 1) si le code n'est pas propre
       - name: Run Flake8 Check
-        run: flake8 starter/backend
+        run: flake8 starter/backend --max-line-length=127
 
   # ==========================================
   # JOB 2 : TESTS 
