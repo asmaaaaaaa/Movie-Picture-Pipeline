@@ -44,7 +44,7 @@ jobs:
       # 4. Exécution du linter dans le dossier backend
       # Retourne un code d'erreur (exit 1) si le code n'est pas propre
       - name: Run Flake8 Check
-        run: flake8 starter/backend/
+        run: flake8 starter/backend
 
   # ==========================================
   # JOB 2 : TESTS 
@@ -66,18 +66,21 @@ jobs:
         with:
           python-version: '3.11'
 
-      # 3. Installer les dépendances de l'application et pytest
-      # (On suppose que tu as un fichier requirements.txt dans ton dossier backend)
-      - name: Install dependencies
+      # 1. Installer Pipenv
+      - name: Install Pipenv
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
-          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+          pip install pipenv
 
-      # 4. Exécuter les tests avec pytest
-      # On cible explicitement le dossier backend
+      # 2. Installer les dépendances backend depuis Pipfile.lock
+      - name: Install Backend Dependencies
+        run: pipenv install --dev
+        working-directory: starter/backend
+
+      # 3. Lancer pytest au sein de l'environnement virtuel Pipenv
       - name: Run Backend Tests with Pytest
-        run: pytest starter/backend/
+        run: pipenv run pytest
+        working-directory: starter/backend
 
   # ==========================================
   # JOB 3 : BUILD DOCKER & PUSH TO ECR
