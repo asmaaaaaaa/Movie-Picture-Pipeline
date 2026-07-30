@@ -13,7 +13,7 @@ jobs:
   # ==========================================
   # JOB 1 : LINTING 
   # ==========================================
-  linting:
+  lint:
     name: Run ESLint
     runs-on: ubuntu-latest
 
