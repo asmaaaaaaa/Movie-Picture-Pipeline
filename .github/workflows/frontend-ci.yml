@@ -1,4 +1,4 @@
-name: 'Frontend Deployment'
+name: 'Frontend Integration (CI) Pipeline'
 on:
   # Manual trigger
   workflow_dispatch:
@@ -97,7 +97,7 @@ jobs:
           context: .
           push: true # 'true' car on veut l'envoyer sur AWS maintenant
           # Récupère l'URL ECR générée dynamiquement à l'étape précédente + le nom de votre repo
-          tags: ${{ steps.login-ecr.outputs.registry }}/mp-frontend:latest
+          tags: ${{ steps.login-ecr.outputs.registry }}/frontend:latest
           build-args: |
             REACT_APP_MOVIE_API_URL=http://localhost:5000
 

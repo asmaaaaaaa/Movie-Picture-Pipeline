@@ -1,0 +1,124 @@
+name: 'Backend Deployment Pipeline'
+on:
+  # Manual trigger
+  workflow_dispatch:
+
+  # Automatic trigger on pull_request events
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**' # Le pipeline backend se déclenchera uniquement si le code du frontend change
+
+jobs:
+    
+  # linting job that fails if the code contain error
+  # ==========================================
+  # JOB 1 : LINTING 
+  # ==========================================
+  linting:
+    name: Run Linting job
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Récupérer le code source du dépôt
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Configurer l'environnement Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Ou '3.x' pour la dernière version stable
+
+      
+      # 3. Installer le linter (et les dépendances si nécessaire)
+      - name: Install dependencies
+        run: |
+          python -m pip upgrade pip
+          pip install flake8
+
+      # 4. Exécution du linter dans le dossier backend
+      # Retourne un code d'erreur (exit 1) si le code n'est pas propre
+      - name: Run Flake8 Check
+        run: flake8 backend/
+
+  # ==========================================
+  # JOB 2 : TESTS 
+  # ==========================================
+
+  # parallel test job that fails if test suit doesn't pass 
+  tests:
+    name: Run Python Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Récupérer le code source
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Configurer l'environnement Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. Installer les dépendances de l'application et pytest
+      # (On suppose que tu as un fichier requirements.txt dans ton dossier backend)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+
+      # 4. Exécuter les tests avec pytest
+      # On cible explicitement le dossier backend
+      - name: Run Tests with Pytest
+        run: |
+          pytest backend/
+
+  # ==========================================
+  # JOB 4 : DEPLOY TO K8S
+  # ==========================================
+  deploy:
+    name: Deploy Backend to Amazon EKS
+    runs-on: ubuntu-latest
+    needs: [build-and-push] # On ne déploie que si le build ECR a réussi
+    
+    steps:
+      # 1. Récupérer le code et les manifests
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Se connecter à AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # 3. Configurer kubectl pour pointer vers le cluster EKS
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name <cluster_name>
+
+      # 4. Mettre à jour l'image du backend avec le tag (Git SHA ou latest)
+      - name: Set Image Tag for Backend
+        run: |
+          # Option A : Si tu as un dossier k8s séparé pour le backend
+          cd k8s/backend/
+          kustomize edit set image ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend:${{ github.sha }}
+          
+          # Option B : Si tu utilises 'sed' sur un fichier classique deployment.yaml
+          # sed -i 's|backend:latest|${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend:${{ github.sha }}|g' k8s/backend-deployment.yaml
+
+      # 5. Appliquer les manifests du backend sur le cluster
+      - name: Deploy Backend Manifests to Kubernetes
+        run: |
+          # Si Kustomize :
+          kubectl apply -k k8s/backend/
+          
+          # Si fichiers YAML classiques :
+          # kubectl apply -f k8s/backend-deployment.yaml -f k8s/backend-service.yaml
+    
