@@ -41,6 +41,7 @@ jobs:
       # 4. linter executuion that return exit 1 if there is an error
       - name: Run ESLint Check
         run: npm run lint
+        working-directory: starter/frontend
 
   # ==========================================
   # JOB 2 : TESTS 
@@ -68,6 +69,7 @@ jobs:
       # Exécution de la suite de tests
       - name: Run Test Suite
         run: npm test -- --watchAll=false
+        working-directory: starter/frontend
         env:
           CI: true
 

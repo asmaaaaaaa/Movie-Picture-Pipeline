@@ -76,9 +76,8 @@ jobs:
 
       # 4. Exécuter les tests avec pytest
       # On cible explicitement le dossier backend
-      - name: Run Tests with Pytest
-        run: |
-          pytest backend/
+      - name: Run Backend Tests with Pytest
+        run: pytest starter/backend/
 
   # ==========================================
   # JOB 3 : BUILD DOCKER & PUSH TO ECR
@@ -110,8 +109,8 @@ jobs:
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend      # CRUCIAL : On se place dans le sous-dossier backend
-          file: ./backend/Dockerfile # Optionnel si ton Dockerfile s'appelle juste 'Dockerfile' et est dans ./backend
+          context: starter/backend      # CRUCIAL : On se place dans le sous-dossier backend
+          file: starter/backend/Dockerfile # Optionnel si ton Dockerfile s'appelle juste 'Dockerfile' et est dans ./backend
           push: true
           # On change le nom de l'image pour cibler le repo ECR du backend
           tags: ${{ steps.login-ecr.outputs.registry }}/backend:latest
