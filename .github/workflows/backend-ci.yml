@@ -38,7 +38,7 @@ jobs:
       # 3. Installer le linter (et les dépendances si nécessaire)
       - name: Install dependencies
         run: |
-          python -m pip upgrade pip
+          python -m pip --upgrade pip
           pip install flake8
 
       # 4. Exécution du linter dans le dossier backend
