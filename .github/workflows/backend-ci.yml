@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+      - movie-branch
     paths:
       - 'frontend/**' # Le pipeline backend se déclenchera uniquement si le code du frontend change
 jobs:
