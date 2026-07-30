@@ -36,6 +36,7 @@ jobs:
       # 3. Installer les dépendances du projet (y compris ESLint)
       - name: Install dependencies
         run: npm ci
+        working-directory: starter/frontend
 
       # 4. linter executuion that return exit 1 if there is an error
       - name: Run ESLint Check
@@ -100,10 +101,13 @@ jobs:
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: starter/frontend
+          file: starter/frontend/Dockerfile
           push: true # 'true' car on veut l'envoyer sur AWS maintenant
           # Récupère l'URL ECR générée dynamiquement à l'étape précédente + le nom de votre repo
-          tags: ${{ steps.login-ecr.outputs.registry }}/frontend:latest
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/frontend:latest
+            ${{ steps.login-ecr.outputs.registry }}/frontend:${{ github.sha }}
           build-args: |
             REACT_APP_MOVIE_API_URL=http://localhost:5000
 
