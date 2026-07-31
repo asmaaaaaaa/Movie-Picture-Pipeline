@@ -7,8 +7,9 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'frontend/**' # Le pipeline backend se déclenchera uniquement si le code du frontend change
+      - movie-branch
+#    paths:
+#      - 'frontend/**' # Le pipeline backend se déclenchera uniquement si le code du frontend change
 
 jobs:
     
@@ -29,19 +30,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # Ou '3.x' pour la dernière version stable
+          python-version: '3.10' # Ou '3.x' pour la dernière version stable
 
       
       # 3. Installer le linter (et les dépendances si nécessaire)
       - name: Install dependencies
         run: |
-          python -m pip upgrade pip
+          python -m pip install --upgrade pip
           pip install flake8
 
       # 4. Exécution du linter dans le dossier backend
       # Retourne un code d'erreur (exit 1) si le code n'est pas propre
       - name: Run Flake8 Check
-        run: flake8 backend/
+        run: flake8 starter/backend --max-line-length=127
 
   # ==========================================
   # JOB 2 : TESTS 
@@ -61,21 +62,23 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
-      # 3. Installer les dépendances de l'application et pytest
-      # (On suppose que tu as un fichier requirements.txt dans ton dossier backend)
-      - name: Install dependencies
+      # 1. Installer Pipenv
+      - name: Install Pipenv
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
-          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+          pip install pipenv
 
-      # 4. Exécuter les tests avec pytest
-      # On cible explicitement le dossier backend
-      - name: Run Tests with Pytest
-        run: |
-          pytest backend/
+      # 2. Installer les dépendances backend depuis Pipfile.lock
+      - name: Install Backend Dependencies
+        run: pipenv install --dev
+        working-directory: starter/backend
+
+      # 3. Lancer pytest au sein de l'environnement virtuel Pipenv
+      - name: Run Backend Tests with Pytest
+        run: pipenv run pytest
+        working-directory: starter/backend
 
   # ==========================================
   # JOB 4 : DEPLOY TO K8S
@@ -101,24 +104,17 @@ jobs:
       # 3. Configurer kubectl pour pointer vers le cluster EKS
       - name: Update Kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name <cluster_name>
-
+          aws eks update-kubeconfig --region us-east-1 --name udacity_cluster
       # 4. Mettre à jour l'image du backend avec le tag (Git SHA ou latest)
       - name: Set Image Tag for Backend
         run: |
-          # Option A : Si tu as un dossier k8s séparé pour le backend
-          cd k8s/backend/
           kustomize edit set image ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend:${{ github.sha }}
-          
-          # Option B : Si tu utilises 'sed' sur un fichier classique deployment.yaml
-          # sed -i 's|backend:latest|${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend:${{ github.sha }}|g' k8s/backend-deployment.yaml
+        working-directory: starter/backend/k8s
 
       # 5. Appliquer les manifests du backend sur le cluster
       - name: Deploy Backend Manifests to Kubernetes
         run: |
           # Si Kustomize :
-          kubectl apply -k k8s/backend/
-          
-          # Si fichiers YAML classiques :
-          # kubectl apply -f k8s/backend-deployment.yaml -f k8s/backend-service.yaml
+          kubectl apply -k .
+        working-directory: starter/backend/k8s
     

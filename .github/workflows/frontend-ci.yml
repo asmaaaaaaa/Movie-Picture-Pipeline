@@ -8,11 +8,11 @@ on:
     branches:
       - main
 
-  push:
+#  push:
 #    paths:
 #      - 'starter/frontend/**'
-    branches:
-      - movie-branch
+#    branches:
+#      - movie-branch
 
 jobs:
   # linting job that fails if the code contain error

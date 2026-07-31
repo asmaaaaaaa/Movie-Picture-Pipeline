@@ -7,8 +7,11 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'frontend/**'
+      - movie-branch
+#    paths:
+#      - 'frontend/**'
+
+  
 
 jobs:
   # linting job that fails if the code contain error
@@ -27,15 +30,19 @@ jobs:
       - name: Set up Node.js 
         uses: actions/setup-node@v4
         with:
-          node-version: latest
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: starter/frontend/package-lock.json
       
       # 3. Installer les dépendances du projet (y compris ESLint)
       - name: Install dependencies
         run: npm ci
+        working-directory: starter/frontend
 
       # 4. linter executuion that return exit 1 if there is an error
       - name: Run ESLint Check
         run: npm run lint
+        working-directory: starter/frontend
 
   # ==========================================
   # JOB 2 : TESTS 
@@ -56,13 +63,16 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: starter/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
+        working-directory: starter/frontend
 
       # Exécution de la suite de tests
       - name: Run Test Suite
         run: npm test -- --watchAll=false
+        working-directory: starter/frontend
         env:
           CI: true
 
@@ -96,7 +106,7 @@ jobs:
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: starter/frontend
           push: true # 'true' car on veut l'envoyer sur AWS maintenant
           # Récupère l'URL ECR générée dynamiquement à l'étape précédente + le nom de votre repo
           tags: |
@@ -128,18 +138,19 @@ jobs:
       # C'est ici que l'autorisation accordée par votre script init.sh devient active !
       - name: Update Kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name <cluster_name>
+          aws eks update-kubeconfig --region us-east-1 --name udacity_cluster
 
       # 4. Optionnel mais recommandé : Remplacer dynamiquement le tag de l'image par le Git SHA
       # Si vous utilisez Kustomize, cela met à jour votre kustomization.yaml à la volée
       - name: Set Image Tag in Kustomize
         run: |
-          cd k8s/ # Allez dans le dossier contenant vos manifests / kustomization.yaml
           kustomize edit set image ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend:${{ github.sha }}
+        working-directory: starter/frontend/k8s # le dossier contenant vos manifests / kustomization.yaml
         # Note : Si vous n'utilisez pas Kustomize, vous pouvez sauter cette étape ou utiliser 'sed' pour modifier votre deployment.yaml
 
       # 5. Appliquer les manifests sur le cluster
       - name: Deploy Manifests to Kubernetes
         run: |
-          kubectl apply -k k8s/ # Utilise Kustomize
+          kubectl apply -k .  # Utilise Kustomize
           # OU si vous utilisez des fichiers classiques : kubectl apply -f k8s/deployment.yaml
+        working-directory: starter/frontend/k8s

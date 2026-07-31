@@ -9,11 +9,12 @@ on:
       - main
       - movie-branch
 
-  push:
+#  push:
 #    paths:
 #      - 'starter/frontend/**' # Le pipeline backend se déclenchera uniquement si le code du frontend change
-    branches:
-      - movie-branch
+#    branches:
+#      - movie-branch
+
 jobs:
   # linting job that fails if the code contain error
   # ==========================================
