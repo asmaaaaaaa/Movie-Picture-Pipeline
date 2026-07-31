@@ -7,7 +7,8 @@ on:
   pull_request:
     branches:
       - main
-      - movie-branch
+    paths:
+      - 'starter/frontend/**'
 
 #  push:
 #    paths:
