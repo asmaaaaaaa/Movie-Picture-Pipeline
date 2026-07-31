@@ -112,7 +112,6 @@ jobs:
           push: true # 'true' car on veut l'envoyer sur AWS maintenant
           # Récupère l'URL ECR générée dynamiquement à l'étape précédente + le nom de votre repo
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/frontend:latest
             ${{ steps.login-ecr.outputs.registry }}/frontend:${{ github.sha }}
           build-args: |
             REACT_APP_MOVIE_API_URL=http://localhost:5000
