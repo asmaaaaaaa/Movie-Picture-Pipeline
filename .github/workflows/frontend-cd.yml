@@ -144,7 +144,7 @@ jobs:
       # Si vous utilisez Kustomize, cela met à jour votre kustomization.yaml à la volée
       - name: Set Image Tag in Kustomize
         run: |
-          kustomize edit set image ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend:${{ github.sha }}
+          kustomize edit set image frontend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend:${{ github.sha }}
         working-directory: starter/frontend/k8s # le dossier contenant vos manifests / kustomization.yaml
         # Note : Si vous n'utilisez pas Kustomize, vous pouvez sauter cette étape ou utiliser 'sed' pour modifier votre deployment.yaml
 

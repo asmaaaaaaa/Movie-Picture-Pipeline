@@ -146,7 +146,7 @@ jobs:
       # 4. Mettre à jour l'image du backend avec le tag (Git SHA ou latest)
       - name: Set Image Tag for Backend
         run: |
-          kustomize edit set image ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend:${{ github.sha }}
+          kustomize edit set image backend=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend:${{ github.sha }}
         working-directory: starter/backend/k8s
 
       # 5. Appliquer les manifests du backend sur le cluster
