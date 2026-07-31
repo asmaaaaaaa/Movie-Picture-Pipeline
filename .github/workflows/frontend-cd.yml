@@ -112,7 +112,7 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/frontend:${{ github.sha }}
           build-args: |
-            REACT_APP_MOVIE_API_URL=http://localhost:5000
+            REACT_APP_MOVIE_API_URL=${{ secrets.REACT_APP_MOVIE_API_URL }}
   # ==========================================
   # JOB 4 : DEPLOY TO K8S
   # ==========================================

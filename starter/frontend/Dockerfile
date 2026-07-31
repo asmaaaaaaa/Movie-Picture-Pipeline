@@ -1,8 +1,5 @@
 FROM  public.ecr.aws/docker/library/node:18.14.2-alpine3.17
 
-ARG REACT_APP_MOVIE_API_URL
-ENV REACT_APP_MOVIE_API_URL=${REACT_APP_MOVIE_API_URL}
-
 WORKDIR /app
 
 # Copy dependdency files
@@ -13,6 +10,10 @@ RUN npm ci
 
 # Copy code
 COPY . .
+
+# Déclarer l'argument pour l'URL du backend AWS
+ARG REACT_APP_MOVIE_API_URL
+ENV REACT_APP_MOVIE_API_URL=$REACT_APP_MOVIE_API_URL
 
 # Build the app
 RUN npm run build
