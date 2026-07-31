@@ -119,6 +119,7 @@ jobs:
   deploy:
     name: Deploy to Amazon EKS
     runs-on: ubuntu-latest
+    needs: build-and-push
     
     steps:
       # 1. Récupérer les manifests Kubernetes depuis votre dépôt
